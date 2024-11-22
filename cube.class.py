@@ -187,6 +187,7 @@ class Cube:
             'B': [['B'] * 3 for _ in range(3)],
         }
 
+
         for face in self.state:
             colour = face[0][0]
             solved_face = solved_cube[colour]
