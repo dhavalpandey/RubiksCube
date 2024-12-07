@@ -1,4 +1,5 @@
 import random
+import copy
 
 def convert_to_3d_array(array):
     return [[list(face[i:i+3]) for i in range(0, 9, 3)] for face in array]
@@ -28,8 +29,8 @@ class Cube:
                 [['Y'] * 3 for _ in range(3)],
                 [['O'] * 3 for _ in range(3)],
                 [['R'] * 3 for _ in range(3)],
-                [['G'] * 3 for _ in range(3)],
                 [['B'] * 3 for _ in range(3)],
+                [['G'] * 3 for _ in range(3)],
             ]
 
     def __str__(self):
@@ -198,11 +199,51 @@ class Cube:
             return True
         return False
 
+    def solve_moves_generator(self):
+        """Generates a set of moves to solve the cube using Iterative Deepening DFS."""
+        moves = ['U', "U'", 'D', "D'", 'L', "L'", 'R', "R'", 'F', "F'", 'B', "B'"]
+        max_depth = 7  # You can adjust this value based on performance
+
+        # Helper function to convert the cube state to a hashable key
+        def state_to_key(state):
+            return tuple(tuple(tuple(row) for row in face) for face in state)
+
+        # Depth-limited DFS
+        def dfs(cube, depth, path, visited):
+            if cube.is_solved_fast():
+                return path
+            if depth == 0:
+                return None
+            state_key = state_to_key(cube.state)
+            if state_key in visited:
+                return None
+            visited.add(state_key)
+            for move in moves:
+                new_cube = Cube(copy.deepcopy(cube.state))
+                new_cube.display_move(move)
+                result = dfs(new_cube, depth - 1, path + [move], visited)
+                if result is not None:
+                    return result
+            visited.remove(state_key)
+            return None
+
+        for depth in range(1, max_depth + 1):
+            visited = set()
+            result = dfs(self, depth, [], visited)
+            if result is not None:
+                return result
+        return []
 
 # Example usage:
 cube = Cube()
-scramble = cube.generate_random_scramble(5)
-print(scramble)
-# cube.apply_all_moves(scramble)
+scramble = cube.generate_random_scramble(10)
+print("Scramble Moves:", scramble)
+cube.apply_all_moves(scramble)
+print("Scrambled Cube:")
+print(cube)
 
-# print(cube)
+solution = cube.solve_moves_generator()
+print("Solution Moves:", solution)
+cube.apply_all_moves(solution)
+print("Solved Cube:")
+print(cube)
